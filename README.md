@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/hslam/msg)](https://goreportcard.com/report/github.com/hslam/msg)
 [![LICENSE](https://img.shields.io/github/license/hslam/msg.svg?style=flat-square)](https://github.com/hslam/msg/blob/master/LICENSE)
 
-Package msg provides a way to use message queue.
+Package msg provides a way to use System V message queue.
 
 ## Get started
 
