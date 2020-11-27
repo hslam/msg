@@ -1,5 +1,6 @@
 # msg
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/hslam/msg)](https://pkg.go.dev/github.com/hslam/msg)
+[![Build Status](https://travis-ci.org/hslam/msg.svg?branch=master)](https://travis-ci.org/hslam/msg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/hslam/msg)](https://goreportcard.com/report/github.com/hslam/msg)
 [![LICENSE](https://img.shields.io/github/license/hslam/msg.svg?style=flat-square)](https://github.com/hslam/msg/blob/master/LICENSE)
 
