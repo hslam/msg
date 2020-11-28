@@ -8,7 +8,7 @@ import (
 )
 
 func TestMsg(t *testing.T) {
-	context := strings.Repeat("1", maxText+1)
+	context := strings.Repeat("1", 128)
 	done := make(chan struct{})
 	go func() {
 		key, err := ftok.Ftok("/tmp", 0x22)

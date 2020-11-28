@@ -4,6 +4,7 @@
 package msg
 
 import (
+	"errors"
 	"syscall"
 	"unsafe"
 )
@@ -15,12 +16,14 @@ const (
 	// IPC_RMID removes identifier
 	IPC_RMID = 0
 
-	maxText = 512
+	maxText = 8192
 )
+
+// ErrTooLong is returned when the Text length is bigger than maxText.
+var ErrTooLong = errors.New("Text length is too long")
 
 type message struct {
 	Type uint
-	flag uint8
 	Text [maxText]byte
 }
 
@@ -41,26 +44,14 @@ func Get(key int, msgflg int) (uintptr, error) {
 
 // Snd calls the msgsnd system call.
 func Snd(msgid uintptr, msg *Msg, flags uint) error {
-	offset := 0
+	if len(msg.Text) > maxText {
+		return ErrTooLong
+	}
 	m := message{Type: msg.Type}
-	for len(msg.Text)-offset > 0 {
-		if len(msg.Text)-offset > maxText {
-			m.flag = 1
-			copy(m.Text[:], msg.Text[offset:offset+maxText])
-			_, _, err := syscall.Syscall6(syscall.SYS_MSGSND, msgid, uintptr(unsafe.Pointer(&m)), 1+maxText, uintptr(flags), 0, 0)
-			if err != 0 {
-				return err
-			}
-			offset += maxText
-		} else {
-			m.flag = 0
-			copy(m.Text[:], msg.Text[offset:len(msg.Text)])
-			_, _, err := syscall.Syscall6(syscall.SYS_MSGSND, msgid, uintptr(unsafe.Pointer(&m)), 1+uintptr(len(msg.Text)-offset), uintptr(flags), 0, 0)
-			if err != 0 {
-				return err
-			}
-			offset += len(msg.Text) - offset
-		}
+	copy(m.Text[:], msg.Text)
+	_, _, err := syscall.Syscall6(syscall.SYS_MSGSND, msgid, uintptr(unsafe.Pointer(&m)), uintptr(len(msg.Text)), uintptr(flags), 0, 0)
+	if err != 0 {
+		return err
 	}
 	return nil
 }
@@ -68,17 +59,12 @@ func Snd(msgid uintptr, msg *Msg, flags uint) error {
 // Rcv calls the msgrcv system call.
 func Rcv(msgid uintptr, msg *Msg, flags uint) error {
 	m := message{Type: msg.Type}
-	for {
-		length, _, err := syscall.Syscall6(syscall.SYS_MSGRCV, msgid, uintptr(unsafe.Pointer(&m)), 1+maxText, uintptr(msg.Type), uintptr(flags), 0)
-		if err != 0 {
-			return err
-		}
-		msg.Type = m.Type
-		msg.Text = append(msg.Text, m.Text[:length-1]...)
-		if m.flag == 0 {
-			break
-		}
+	length, _, err := syscall.Syscall6(syscall.SYS_MSGRCV, msgid, uintptr(unsafe.Pointer(&m)), maxText, uintptr(msg.Type), uintptr(flags), 0)
+	if err != 0 {
+		return err
 	}
+	msg.Type = m.Type
+	msg.Text = m.Text[:length]
 	return nil
 }
 
