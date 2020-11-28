@@ -18,7 +18,7 @@ import "github.com/hslam/msg"
 ```
 ### Usage
 #### Example
-msgsnd
+**msgsnd**
 ```go
 package main
 
@@ -46,7 +46,7 @@ func main() {
 	time.Sleep(time.Second * 10)
 }
 ```
-msgrcv
+**msgrcv**
 ```go
 package main
 
