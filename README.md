@@ -38,8 +38,7 @@ func main() {
 		panic(err)
 	}
 	defer msg.Remove(msgid)
-	m := &msg.Msg{Type: 1, Text: []byte("Hello World")}
-	err = msg.Snd(msgid, m, 0600)
+	err = msg.Snd(msgid, 1, []byte("Hello World"), 0600)
 	if err != nil {
 		panic(err)
 	}
@@ -65,12 +64,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	m := &msg.Msg{Type: 1}
-	err = msg.Rcv(msgid, m, 0600)
+	text, err := msg.Rcv(msgid, 1, 0600)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(string(m.Text))
+	fmt.Println(string(text))
 }
 ```
 

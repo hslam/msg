@@ -27,12 +27,6 @@ type message struct {
 	Text [maxText]byte
 }
 
-// Msg represents a message.
-type Msg struct {
-	Type uint
-	Text []byte
-}
-
 // Get calls the msgget system call.
 func Get(key int, msgflg int) (uintptr, error) {
 	msgid, _, err := syscall.Syscall(syscall.SYS_MSGGET, uintptr(key), uintptr(msgflg), 0)
@@ -43,13 +37,13 @@ func Get(key int, msgflg int) (uintptr, error) {
 }
 
 // Snd calls the msgsnd system call.
-func Snd(msgid uintptr, msg *Msg, flags uint) error {
-	if len(msg.Text) > maxText {
+func Snd(msgid uintptr, msgType uint, msgText []byte, flags uint) error {
+	if len(msgText) > maxText {
 		return ErrTooLong
 	}
-	m := message{Type: msg.Type}
-	copy(m.Text[:], msg.Text)
-	_, _, err := syscall.Syscall6(syscall.SYS_MSGSND, msgid, uintptr(unsafe.Pointer(&m)), uintptr(len(msg.Text)), uintptr(flags), 0, 0)
+	m := message{Type: msgType}
+	copy(m.Text[:], msgText)
+	_, _, err := syscall.Syscall6(syscall.SYS_MSGSND, msgid, uintptr(unsafe.Pointer(&m)), uintptr(len(msgText)), uintptr(flags), 0, 0)
 	if err != 0 {
 		return err
 	}
@@ -57,15 +51,13 @@ func Snd(msgid uintptr, msg *Msg, flags uint) error {
 }
 
 // Rcv calls the msgrcv system call.
-func Rcv(msgid uintptr, msg *Msg, flags uint) error {
-	m := message{Type: msg.Type}
-	length, _, err := syscall.Syscall6(syscall.SYS_MSGRCV, msgid, uintptr(unsafe.Pointer(&m)), maxText, uintptr(msg.Type), uintptr(flags), 0)
+func Rcv(msgid uintptr, msgType uint, flags uint) ([]byte, error) {
+	m := message{Type: msgType}
+	length, _, err := syscall.Syscall6(syscall.SYS_MSGRCV, msgid, uintptr(unsafe.Pointer(&m)), maxText, uintptr(msgType), uintptr(flags), 0)
 	if err != 0 {
-		return err
+		return nil, err
 	}
-	msg.Type = m.Type
-	msg.Text = m.Text[:length]
-	return nil
+	return m.Text[:length], nil
 }
 
 // Remove removes the message queue with the given id.

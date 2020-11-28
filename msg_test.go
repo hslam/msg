@@ -20,8 +20,7 @@ func TestMsg(t *testing.T) {
 			panic(err)
 		}
 		defer Remove(msgid)
-		m := &Msg{Type: 1, Text: []byte(context)}
-		err = Snd(msgid, m, 0600)
+		err = Snd(msgid, 1, []byte(context), 0600)
 		if err != nil {
 			panic(err)
 		}
@@ -37,13 +36,12 @@ func TestMsg(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	m := &Msg{Type: 1}
-	err = Rcv(msgid, m, 0600)
+	text, err := Rcv(msgid, 1, 0600)
 	if err != nil {
 		panic(err)
 	}
-	if context != string(m.Text) {
-		t.Error(context, string(m.Text))
+	if context != string(text) {
+		t.Error(context, string(text))
 	}
 	<-done
 }
