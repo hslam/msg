@@ -24,10 +24,10 @@ func TestMsg(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Millisecond * 200)
 		close(done)
 	}()
-	time.Sleep(time.Second)
+	time.Sleep(time.Millisecond * 100)
 	key, err := ftok.Ftok("/tmp", 0x22)
 	if err != nil {
 		panic(err)
