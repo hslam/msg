@@ -20,7 +20,7 @@ func TestMsg(t *testing.T) {
 			panic(err)
 		}
 		defer Remove(msgid)
-		err = Snd(msgid, 1, []byte(context), 0600)
+		err = Send(msgid, 1, []byte(context), 0600)
 		if err != nil {
 			panic(err)
 		}
@@ -36,7 +36,7 @@ func TestMsg(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	text, err := Rcv(msgid, 1, 0600)
+	text, err := Receive(msgid, 1, 0600)
 	if err != nil {
 		panic(err)
 	}

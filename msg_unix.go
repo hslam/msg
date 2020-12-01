@@ -54,13 +54,27 @@ func Get(key int, msgflg int) (int, error) {
 }
 
 // Snd calls the msgsnd system call.
-func Snd(msgid int, msgType uint, msgText []byte, flags int) error {
-	if len(msgText) > maxText {
-		return ErrTooLong
-	}
-	m := message{Type: msgType}
-	copy(m.Text[:], msgText)
-	_, _, err := syscall.Syscall6(syscall.SYS_MSGSND, uintptr(msgid), uintptr(unsafe.Pointer(&m)), uintptr(len(msgText)), uintptr(flags), 0, 0)
+//
+// The msgsnd() and msgrcv() system calls are used to send messages to,
+// and receive messages from, a System V message queue.  The calling
+// process must have write permission on the message queue in order to
+// send a message, and read permission to receive a message.
+// The msgp argument is a pointer to a caller-defined structure of the
+// following general form:
+//
+// struct msgbuf {
+// 	long mtype;       /* message type, must be > 0 */
+// 	char mtext[1];    /* message data */
+// };
+// The mtext field is an array (or other structure) whose size is speci‐
+// fied by msgsz, a nonnegative integer value.  Messages of zero length
+// (i.e., no mtext field) are permitted.  The mtype field must have a
+// strictly positive integer value.  This value can be used by the re‐
+// ceiving process for message selection (see the description of ms‐
+// grcv() below).
+//
+func Snd(msgid int, msgp uintptr, msgsz int, msgflg int) error {
+	_, _, err := syscall.Syscall6(syscall.SYS_MSGSND, uintptr(msgid), uintptr(msgp), uintptr(msgsz), uintptr(msgflg), 0, 0)
 	if err != 0 {
 		return err
 	}
@@ -68,10 +82,30 @@ func Snd(msgid int, msgType uint, msgText []byte, flags int) error {
 }
 
 // Rcv calls the msgrcv system call.
-func Rcv(msgid int, msgType uint, flags int) ([]byte, error) {
-	m := message{Type: msgType}
-	length, _, err := syscall.Syscall6(syscall.SYS_MSGRCV, uintptr(msgid), uintptr(unsafe.Pointer(&m)), maxText, uintptr(msgType), uintptr(flags), 0)
+func Rcv(msgid int, msgp uintptr, msgsz int, msgtyp uint, msgflg int) (int, error) {
+	r1, _, err := syscall.Syscall6(syscall.SYS_MSGRCV, uintptr(msgid), msgp, uintptr(msgsz), uintptr(msgtyp), uintptr(msgflg), 0)
+	length := int(r1)
 	if err != 0 {
+		return length, err
+	}
+	return length, nil
+}
+
+// Send calls the msgsnd system call.
+func Send(msgid int, msgType uint, msgText []byte, flags int) error {
+	if len(msgText) > maxText {
+		return ErrTooLong
+	}
+	m := message{Type: msgType}
+	copy(m.Text[:], msgText)
+	return Snd(msgid, uintptr(unsafe.Pointer(&m)), len(msgText), flags)
+}
+
+// Receive calls the msgrcv system call.
+func Receive(msgid int, msgType uint, flags int) ([]byte, error) {
+	m := message{Type: msgType}
+	length, err := Rcv(msgid, uintptr(unsafe.Pointer(&m)), maxText, msgType, flags)
+	if err != nil {
 		return nil, err
 	}
 	return m.Text[:length], nil
